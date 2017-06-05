@@ -1,0 +1,18 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <script src="Scripts/angular.min.js"></script>
+    <script src="js/app.js"></script>
+    <title>Angular</title>
+</head>
+<body ng-app="app" ng-controller="hello as h" ng-init="h.name='kiran'">
+    <input type="text" name="name" ng-model="h.name" />
+    <span>{{h.name}}</span>
+
+    <ol>
+        <li ng-repeat="n in h.arr">{{n}}</li>
+    </ol>
+
+    <button name="btn" value="click" ng-click="h.clickme()">Click</button>
+</body>
+</html>
