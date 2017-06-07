@@ -3,10 +3,6 @@
 <head>
     <title>Bug Tracker</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-
-</head>
-<body>
-
     <!--
 
         Use Case
@@ -26,5 +22,43 @@
         12 categorize the bugs
         13 view the bugs belong to one particular category
         -->
+
+    <script>
+
+        var bugTrackerApp = angular.module("bugTrackerApp", []);
+        bugTrackerApp.run(function ($rootScope) {
+            console.log('application got initiated');
+        });
+        bugTrackerApp.controller("bugController", function ($scope) {
+            var bugs = [{ id: 1, desc: 'function is not defined' },
+                       { id: 2, desc: 'Stack over flow exception' },
+                       { id: 3, desc: 'arthemtic exception' },
+                       { id: 4, desc: 'object reference not set to instance of an object' }];
+            this.bugs = bugs;
+            this.add = function () {
+                this.bugs.push({ id: this.bugs.length + 1, desc: this.desc });
+            }
+            this.desc = "";
+        });
+    </script>
+    <style>
+        .close {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+
+
+<body ng-app="bugTrackerApp" ng-controller="bugController as bc">
+    <h2> Bug Tracker </h2>
+    <input type="text" name="txtBug" ng-model="bc.desc" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" />
+    <div class="statistics"> 3/10   </div>
+    <div class="bugs">
+        <ul ng-repeat="b in bc.bugs">
+            <li>{{b.desc}}</li>
+        </ul>
+    </div>
+
+
 </body>
 </html>
