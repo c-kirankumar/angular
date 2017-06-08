@@ -8,12 +8,12 @@
         Use Case
         --------------
 
-        1. Add a bug
-        2. list all the bugs
-        3. toggle the completion status of the bug
-        4. Remove closed bugs.
-        5. Display statistics.
-        6. Search for bugs
+        1. Add a bug -done
+        2. list all the bugs - done
+        3. toggle the completion status of the bug - done
+        4. Remove closed bugs. - done
+        5. Display statistics. - done.
+        6. Search for bugs -- done.
         7. Sort the bugs
         8. improvies how the bugs are displayed
         9. persist the bugs in the storage
@@ -27,22 +27,54 @@
 
         var bugTrackerApp = angular.module("bugTrackerApp", []);
         bugTrackerApp.run(function ($rootScope) {
+            window.rootScope = $rootScope;
+            console.log($rootScope);
             console.log('application got initiated');
         });
-        bugTrackerApp.controller("bugController", function ($scope) {
-            var bugs = [{ id: 1, desc: 'function is not defined' },
-                       { id: 2, desc: 'Stack over flow exception' },
-                       { id: 3, desc: 'arthemtic exception' },
-                       { id: 4, desc: 'object reference not set to instance of an object' }];
-            this.bugs = bugs;
-            this.add = function () {
-                this.bugs.push({ id: this.bugs.length + 1, desc: this.desc });
-            }
-            this.desc = "";
-        });
+        bugTrackerApp.controller("bugController",
+            function ($scope) {
+                console.log("controller scope0 " + $scope);
+
+                var bugs = [
+                    { id: 1, desc: 'FUNCTIOn is not defined', isClosed: false },
+                    { id: 2, desc: 'STACK Over flow exception', isClosed: false },
+                    { id: 3, desc: 'ARTHEMTic exception', isClosed: false },
+                    { id: 4, desc: 'OBJECT reference not set to instance of an object', isClosed: false },
+                { id: 5, desc: 'runtime server error occured ', isClosed: false }
+
+                ];
+                this.bugs = bugs;
+                this.desc = "";
+
+                this.add = function () {
+                    this.bugs.push({ id: this.bugs.length + 1, desc: this.desc, isClosed: false });
+                }
+                this.toggle = function (bug) {
+                    bug.isClosed = !bug.isClosed;
+                };
+                this.removeClosedBugs = function () {
+                    for (var i = this.bugs.length - 1; i >= 0; i--) {
+                        if (this.bugs[i].isClosed) {
+                            this.bugs.splice(i, 1);
+                        }
+                    }
+                }
+
+                this.getClosedBugs = function () {
+                    return this.bugs.reduce(function (total, bug) {
+                        return bug.isClosed ? ++total : total;
+                    }, 0);
+
+                }
+
+            });
+
     </script>
     <style>
-        .close {
+        .closed {
+            color: red;
+            font-weight: bold;
+            font-style: italic;
             text-decoration: line-through;
         }
     </style>
@@ -51,11 +83,14 @@
 
 <body ng-app="bugTrackerApp" ng-controller="bugController as bc">
     <h2> Bug Tracker </h2>
-    <input type="text" name="txtBug" ng-model="bc.desc" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" />
-    <div class="statistics"> 3/10   </div>
+    Search : <input type="text" name="txtSearch" ng-model="bc.search" value=" " /> <br />
+    Big Title:   <input type="text" name="txtBug" ng-model="bc.desc" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" /><input type="button" ng-click="bc.removeClosedBugs()" value="Remove Closed" id="btnRemoveBug" />
+    <div class="statistics">{{bc.getClosedBugs()}}/ {{bc.bugs.length}}   </div>
     <div class="bugs">
-        <ul ng-repeat="b in bc.bugs">
-            <li>{{b.desc}}</li>
+        <ul>
+            <li ng-repeat="bug in bc.bugs | filter:bc.search"
+                ng-class="{closed : bug.isClosed}"
+                ng-click="bc.toggle(bug)">{{bug.desc  }}</li>
         </ul>
     </div>
 
