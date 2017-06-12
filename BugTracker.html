@@ -14,7 +14,7 @@
         4. Remove closed bugs. - done
         5. Display statistics. - done.
         6. Search for bugs -- done.
-        7. Sort the bugs
+        7. Sort the bugs -done
         8. improvies how the bugs are displayed
         9. persist the bugs in the storage
         10. display the createdDT of the bugs
@@ -36,10 +36,10 @@
                 console.log("controller scope0 " + $scope);
 
                 var bugs = [
-                    { id: 1, desc: 'FUNCTIOn is not defined', isClosed: false },
-                    { id: 2, desc: 'STACK Over flow exception', isClosed: false },
-                    { id: 3, desc: 'ARTHEMTic exception', isClosed: false },
-                    { id: 4, desc: 'OBJECT reference not set to instance of an object', isClosed: false },
+                    { id: 1, desc: 'function is not defined', isClosed: false },
+                    { id: 2, desc: 'stack over flow exception', isClosed: false },
+                    { id: 3, desc: 'arthemtic exception', isClosed: false },
+                    { id: 4, desc: 'object reference not set to instance of an object', isClosed: false },
                 { id: 5, desc: 'runtime server error occured ', isClosed: false }
 
                 ];
@@ -77,18 +77,31 @@
             font-style: italic;
             text-decoration: line-through;
         }
+
+        .statistics, .search, .orderBy, .bugs {
+            padding: 10px 0px;
+        }
     </style>
 </head>
 
 
 <body ng-app="bugTrackerApp" ng-controller="bugController as bc">
     <h2> Bug Tracker </h2>
-    Search : <input type="text" name="txtSearch" ng-model="bc.search" value=" " /> <br />
-    Big Title:   <input type="text" name="txtBug" ng-model="bc.desc" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" /><input type="button" ng-click="bc.removeClosedBugs()" value="Remove Closed" id="btnRemoveBug" />
     <div class="statistics">{{bc.getClosedBugs()}}/ {{bc.bugs.length}}   </div>
+
+    <div class="search">
+        Search : <input type="text" name="txtSearch" ng-model="searchBug.desc" value=" " /> <label>isClosed ? </label> <input type="checkbox" name="" id="" ng-model="searchBug.isClosed" /> <input id="" type="button" value="Show All" ng-click="searchBug.isClosed=undefined" />
+    </div>
+
+    <div class="orderBy">
+        Order By : <input type="text" name="txtOrder" ng-model="orderBy" /> <label>isDecending</label> <input type="checkbox" name="" ng-model="reverser" />
+    </div>
+    <div class="bugs">
+        Bug Title:   <input type="text" name="txtBug" ng-model="bc.desc" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" /><input type="button" ng-click="bc.removeClosedBugs()" value="Remove Closed" id="btnRemoveBug" />
+    </div>
     <div class="bugs">
         <ul>
-            <li ng-repeat="bug in bc.bugs | filter:bc.search"
+            <li ng-repeat="bug in bc.bugs | filter:searchBug | orderBy : orderBy  :  reverser"
                 ng-class="{closed : bug.isClosed}"
                 ng-click="bc.toggle(bug)">{{bug.desc  }}</li>
         </ul>
