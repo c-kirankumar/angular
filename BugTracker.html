@@ -14,7 +14,7 @@
         4. Remove closed bugs. - done
         5. Display statistics. - done.
         6. Search for bugs -- done.
-        7. Sort the bugs -done
+        7. Sort the bugs -- done
         8. improvies how the bugs are displayed
         9. persist the bugs in the storage
         10. display the createdDT of the bugs
@@ -27,47 +27,64 @@
 
         var bugTrackerApp = angular.module("bugTrackerApp", []);
         bugTrackerApp.run(function ($rootScope) {
-            window.rootScope = $rootScope;
-            console.log($rootScope);
-            console.log('application got initiated');
         });
-        bugTrackerApp.controller("bugController",
-            function ($scope) {
-                console.log("controller scope0 " + $scope);
 
-                var bugs = [
-                    { id: 1, desc: 'function is not defined', isClosed: false },
-                    { id: 2, desc: 'stack over flow exception', isClosed: false },
-                    { id: 3, desc: 'arthemtic exception', isClosed: false },
-                    { id: 4, desc: 'object reference not set to instance of an object', isClosed: false },
-                { id: 5, desc: 'runtime server error occured ', isClosed: false }
+        bugTrackerApp.value('defaultTrimLength', 20);
 
-                ];
-                this.bugs = bugs;
-                this.desc = "";
+        bugTrackerApp.factory("Bug", function () {
+            function Bug(defaults) {
+                defaults = defaults || {};
+                this.name = defaults.name || "";
+                this.isClosed = defaults.isClosed || false;
+            }
 
-                this.add = function () {
-                    this.bugs.push({ id: this.bugs.length + 1, desc: this.desc, isClosed: false });
-                }
-                this.toggle = function (bug) {
-                    bug.isClosed = !bug.isClosed;
-                };
-                this.removeClosedBugs = function () {
-                    for (var i = this.bugs.length - 1; i >= 0; i--) {
-                        if (this.bugs[i].isClosed) {
-                            this.bugs.splice(i, 1);
-                        }
+            Bug.prototype.toggle = function () {
+                this.isClosed = !this.isClosed;
+            };
+            return Bug;
+        });
+
+        bugTrackerApp.filter('trimText', function (defaultTrimLength) {
+            return function (data, length) {
+                length = length || defaultTrimLength;
+                return data.length > length ? data.substr(0, length) + '...' : data;
+            }
+        });
+
+        bugTrackerApp.controller("bugController", function (Bug) {
+            var bugs = [
+              new Bug({ name: 'function is not defined' }),
+              new Bug({ name: 'stack over flow exception' }),
+               new Bug({ name: 'arthemtic exception' }),
+               new Bug({ name: 'object reference not set to instance of an object' }),
+               new Bug({ name: 'runtime server error occured ' })
+            ];
+            this.bugs = bugs;
+            this.name = "";
+
+            this.add = function () {
+                this.bugs.push(new Bug({ name: this.name }));
+            }
+            this.toggle = function (bug) {
+                bug.toggle();
+            };
+            this.removeClosedBugs = function () {
+                for (var i = this.bugs.length - 1; i >= 0; i--) {
+                    if (this.bugs[i].isClosed) {
+                        this.bugs.splice(i, 1);
                     }
                 }
+            }
 
-                this.getClosedBugs = function () {
-                    return this.bugs.reduce(function (total, bug) {
-                        return bug.isClosed ? ++total : total;
-                    }, 0);
+            this.getClosedBugs = function () {
+                return this.bugs.reduce(function (total, bug) {
+                    return bug.isClosed ? ++total : total;
+                }, 0);
 
-                }
+            }
 
-            });
+        });
+
 
     </script>
     <style>
@@ -90,20 +107,20 @@
     <div class="statistics">{{bc.getClosedBugs()}}/ {{bc.bugs.length}}   </div>
 
     <div class="search">
-        Search : <input type="text" name="txtSearch" ng-model="searchBug.desc" value=" " /> <label>isClosed ? </label> <input type="checkbox" name="" id="" ng-model="searchBug.isClosed" /> <input id="" type="button" value="Show All" ng-click="searchBug.isClosed=undefined" />
+        Search : <input type="text" name="txtSearch" ng-model="filterBugs.name" value=" " /> <label>isClosed ? </label> <input type="checkbox" name="" ng-model="filterBugs.isClosed" id="" /> <input id="" type="button" value="Show All" ng-click="filterBugs.isClosed=undefined" />
     </div>
 
     <div class="orderBy">
-        Order By : <input type="text" name="txtOrder" ng-model="orderBy" /> <label>isDecending</label> <input type="checkbox" name="" ng-model="reverser" />
+        Order By : <input type="text" name="txtOrder" ng-model="orderBy" /> <label>isDecending</label> <input type="checkbox" name="" ng-model="isDescending" />
     </div>
     <div class="bugs">
-        Bug Title:   <input type="text" name="txtBug" ng-model="bc.desc" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" /><input type="button" ng-click="bc.removeClosedBugs()" value="Remove Closed" id="btnRemoveBug" />
+        Bug Title:   <input type="text" name="txtBug" ng-model="bc.name" value=" " /> <input type="button" ng-click="bc.add()" value="AddBug" id="btnAddBug" /><input type="button" ng-click="bc.removeClosedBugs()" value="Remove Closed" id="btnRemoveBug" />
     </div>
     <div class="bugs">
         <ul>
-            <li ng-repeat="bug in bc.bugs | filter:searchBug | orderBy : orderBy  :  reverser"
+            <li ng-repeat="bug in bc.bugs | filter:filterBugs | orderBy : orderBy : isDescending"
                 ng-class="{closed : bug.isClosed}"
-                ng-click="bc.toggle(bug)">{{bug.desc  }}</li>
+                ng-click="bc.toggle(bug)">{{bug.name | trimText :30 }}</li>
         </ul>
     </div>
 
