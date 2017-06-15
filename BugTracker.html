@@ -3,6 +3,8 @@
 <head>
     <title>Bug Tracker</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <script src="moment.js"></script>
+    <script src="utils.js"></script>
     <!--
 
     Use Case
@@ -15,8 +17,8 @@
     5. Display statistics. - done.
     6. Search for bugs -- done.
     7. Sort the bugs -- done
-    8. improvies how the bugs are displayed
-    9. persist the bugs in the storage
+    8. improvies how the bugs are displayed --done
+    9. persist the bugs in the storage -done
     window.localStorage
         - key/value store
         - both key and value should be strings
@@ -27,7 +29,7 @@
         . key(index)
         . clear()
         . length
-        10. display the createdDT of the bugs
+        10. display the createdDT of the bugs --done
         11 persis the bugs in the server
         12 categorize the bugs
         13 view the bugs belong to one particular category
@@ -35,30 +37,28 @@
 
     <script>
 
-        var bugTrackerApp = angular.module("bugTrackerApp", []);
+
+        var bugTrackerApp = angular.module("bugTrackerApp", ["utils"]);
+
         bugTrackerApp.run(function ($rootScope) {
         });
 
         bugTrackerApp.value('defaultTrimLength', 20);
+        bugTrackerApp.value('momentApi', window.moment);
 
         bugTrackerApp.factory("Bug", function () {
             function Bug(defaults) {
                 defaults = defaults || {};
+                this.id = defaults.id || 0;
                 this.name = defaults.name || "";
                 this.isClosed = defaults.isClosed || false;
+                this.createdAt = defaults.createdAt || new Date();
             }
 
             Bug.prototype.toggle = function () {
                 this.isClosed = !this.isClosed;
             };
             return Bug;
-        });
-
-        bugTrackerApp.filter('trimText', function (defaultTrimLength) {
-            return function (data, length) {
-                length = length || defaultTrimLength;
-                return data.length > length ? data.substr(0, length) + '...' : data;
-            }
         });
 
         bugTrackerApp.factory('BugStorage', function ($window, Bug) {
@@ -104,24 +104,6 @@
 
         });
 
-        //bugTrackerApp.filter("closedCount", function () {
-
-        //    return function (bugs) {
-        //        return bugs.reduce(function (total, bug) {
-        //            return bug.isClosed ? ++total : total;
-        //        }, 0);
-        //    }
-        //});
-
-
-        bugTrackerApp.filter("closedCount", function ($filter) {
-            var builtInFilter = $filter('filter');
-            return function (bugs) {
-
-                return builtInFilter(bugs, { isClosed: true }).length;
-            }
-        });
-
         bugTrackerApp.controller("bugController", function (Bug, BugStorage) {
             //var bugs = [
             //  new Bug({ name: 'function is not defined' }),
@@ -130,15 +112,13 @@
             //   new Bug({ name: 'object reference not set to instance of an object' }),
             //   new Bug({ name: 'runtime server error occured ' })
             //];
-            var bugs = BugStorage.getAll();
-            this.bugs = bugs;
+            this.bugs = BugStorage.getAll();
             this.name = "";
 
             this.add = function () {
                 this.bugs.push(BugStorage.save(new Bug({ name: this.name })));
             }
             this.toggle = function (bug) {
-
                 bug.toggle();
                 BugStorage.save(bug);
             };
@@ -150,14 +130,6 @@
                     }
                 }
             }
-
-            //this.getClosedBugs = function () {
-            //    return this.bugs.reduce(function (total, bug) {
-            //        return bug.isClosed ? ++total : total;
-            //    }, 0);
-
-            //}
-
         });
 
 
@@ -172,6 +144,10 @@
 
         .statistics, .search, .orderBy, .bugs {
             padding: 10px 0px;
+        }
+
+        .timeSpan {
+            font-style: italic;
         }
     </style>
 </head>
@@ -195,7 +171,7 @@
         <ol>
             <li ng-repeat="bug in bc.bugs | filter:filterBugs | orderBy : orderBy : isDescending"
                 ng-class="{closed : bug.isClosed}"
-                ng-click="bc.toggle(bug)">{{bug.name | trimText :30 }}</li>
+                ng-click="bc.toggle(bug)">{{bug.name | trimText :30 }}-<span class="timeSpan"> {{ bug.createdAt | toMoment}}</span></li>
         </ol>
     </div>
 
