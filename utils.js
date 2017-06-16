@@ -1,5 +1,6 @@
 ﻿var utils = angular.module('utils', []);
 
+utils.value('momentApi', window.moment);
 
 utils.filter('trimText', function (defaultTrimLength) {
     return function (data, length) {
