@@ -14,36 +14,42 @@
             }
 
         };
-        $(function () {
-            angular.bootstrap(document.body, []);
-            window.scope = angular.element(document.body).scope();
-            //setup
-            scope.greeter = greeter;
-            //React to UI actions
-            $("#txtName").change(function () {
-                var self = this;
-                scope.$apply(function () {
-                    scope.greeter.name = self.value;
-                });
-            });
-            $("#btnGreet").click(function () {
-                scope.$apply(function () {
-                    scope.greeter.greet();
-                });
-            });
-            //React to model changes
-            scope.$watch("greeter.name", function (newValue, oldValue) {
-                $("#txtName").val(newValue);
-            });
-            scope.$watch("greeter.greetMsg", function (newValue, oldValue) {
-                $("#divMessage").html(newValue);
-            });
+
+        var app = angular.module("app", []);
+        app.run(function ($rootScope) {
+            window.rootScope = $rootScope;
+
+            console.log("rootScope => ");
+            console.dir($rootScope);
+        })
+
+        app.controller('helloController', function ($scope) {
+            $scope.name = "helloController";
+            console.log("helloController");
+            console.log($scope);
         });
+        app.controller('hello1Controller', function ($scope) {
+            $scope.name = "helloController1";
+            console.log("helloController1");
+            console.log($scope);
+        });
+        app.controller('hello2Controller', function ($scope) {
+            $scope.name = "helloController2";
+            console.log("helloController2");
+            console.log($scope);
+        });
+
     </script>
 </head>
-<body>
-    <label>Name: </label> <input type="text" id="txtName" name="name" value=" " />
-    <input type="button" name="btn" id="btnGreet" value="Greet" />
-    <div id="divMessage"></div>
+
+<body ng-app="app">
+    <div ng-controller="helloController">
+        <label>Name: </label> <input type="text" id="txtName" name="name" value=" " />
+        <!--<input type="button" name="btn" id="btnGreet" value="Greet" />-->
+        <div id="divMessage">{{name}}</div>
+    </div>
+    <div ng-controller="hello1Controller"></div>
+
+    <div ng-controller="hello2Controller"></div>
 </body>
 </html>
