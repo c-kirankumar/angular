@@ -91,3 +91,21 @@ function addAsync(x,y) {
     });
     return promise;
 }
+
+
+function addAsync(x,y) {
+
+    var promise = new Promise(function (resolve,reject) {
+        setTimeout(function () {
+            try{
+                var result = x / y;
+            }
+            catch(ex) {
+                reject('divide by zero' + ex);
+            }
+            console.log('[SP] returing result');
+            resolve(result);
+        }, 4000)
+    });
+    return promise;
+};

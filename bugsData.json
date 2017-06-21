@@ -19,10 +19,22 @@
       "createdAt": "2017-04-09T10:34:39.318Z"
     },
     {
-      "id": 15,
-      "name": "Thi si a new bug",
+      "id": 19,
+      "name": "infinite loop error",
       "isClosed": false,
-      "createdAt": "2017-04-09T10:39:44.005Z"
+      "createdAt": "2017-06-21T17:14:19.385Z"
+    },
+    {
+      "id": 20,
+      "name": "runt time error occured",
+      "isClosed": true,
+      "createdAt": "2017-06-21T17:14:49.095Z"
+    },
+    {
+      "id": 21,
+      "name": "hello bug",
+      "isClosed": false,
+      "createdAt": "2017-06-21T17:44:42.062Z"
     }
   ],
   "employees": [

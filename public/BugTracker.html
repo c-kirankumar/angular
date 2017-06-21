@@ -44,7 +44,7 @@
         });
 
         bugTrackerApp.value('defaultTrimLength', 20);
-       
+        /*
         bugTrackerApp.factory("BugStorage", function (Bug,$window) {
 
             var bugStorage = $window.localStorage;
@@ -76,7 +76,7 @@
             }
 
         });
-
+        */
         bugTrackerApp.factory("Bug", function () {
             function Bug(defaults) {
                 defaults = defaults || {};
@@ -92,21 +92,71 @@
             return Bug;
         });
 
-        bugTrackerApp.controller("bugController", function (Bug, BugStorage) {
-            this.bugs = BugStorage.getAll();
-            this.name = "";
+        bugTrackerApp.factory('BugService', function ($http, Bug, $q) {
 
+            function save(bug) {
+                var defered = $q.defer();
+                $http.post('/bugs', bug).then(function (response) {
+                    var result = response.data;
+                    defered.resolve(result);
+                });
+                return defered.promise;
+            }
+            function getAll() {
+                return $http.get('/bugs');
+            };
+            function update(bug) {
+                var defered = $q.defer();
+                $http.put('/bugs/' + bug.id, bug).then(function (response) {
+                    var result = response.data;
+                    defered.resolve(result);
+                });
+                return defered.promise;
+            }
+
+            function remove(bug) {
+                var defered = $q.defer();
+                $http.delete('/bugs/' + bug.id).then(function (response) {
+                    var result = response.data;
+                    defered.resolve(result);
+                });
+                return defered.promise;
+            }
+            return {
+                getAll: getAll,
+                save: save,
+                update: update,
+                remove: remove
+            };
+
+        })
+
+
+
+        bugTrackerApp.controller("bugController", function (Bug, BugService) {
+            var _self = this;
+            this.bugs = [];
+            BugService.getAll().then(function (response) {
+                var result = response.data.map(function (bug) {
+                    return new Bug(bug);
+                });
+                _self.bugs = result;
+            });
+
+            this.name = "";
             this.add = function () {
-                this.bugs.push(BugStorage.save(new Bug({ name: this.name })));
+                BugService.save(new Bug({ name: this.name })).then(function (response) {
+                    _self.bugs.push(new Bug(response));
+                })
             }
             this.toggle = function (bug) {
                 bug.toggle();
-                BugStorage.save(bug);
+                BugService.update(bug);
             };
             this.removeClosedBugs = function () {
                 for (var i = this.bugs.length - 1; i >= 0; i--) {
                     if (this.bugs[i].isClosed) {
-                        BugStorage.remove(this.bugs[i]);
+                        BugService.remove(this.bugs[i]);
                         this.bugs.splice(i, 1);
                     }
                 }
@@ -133,7 +183,7 @@
         }
     </style>
 </head>
-    
+
 
 <body ng-app="bugTrackerApp" ng-controller="bugController as bc">
     <h2> Bug Tracker </h2>
@@ -153,7 +203,7 @@
         <ol>
             <li ng-repeat="bug in bc.bugs | filter:filterBugs | orderBy : orderBy : isDescending"
                 ng-class="{closed : bug.isClosed}"
-                ng-click="bc.toggle(bug)">{{bug.name | trimText :30 }} - <span class="timeSpan">{{ bug.createdAt | toMoment}} </span></li>
+                ng-click="bc.toggle(bug)">{{bug.name | trimText :30 }} -<span class="timeSpan">{{ bug.createdAt | toMoment}} </span></li>
         </ol>
     </div>
 
