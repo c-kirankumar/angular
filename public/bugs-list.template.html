@@ -1,0 +1,19 @@
+﻿<div class="statistics">{{ bc.bugs | closedCount  }}/ {{bc.bugs.length}}   </div>
+<div class="search">
+    Search : <input type="text" name="txtSearch" ng-model="filterBugs.name" value=" " /> <label>isClosed ? </label> <input type="checkbox" name="" ng-model="filterBugs.isClosed" id="" /> <input id="" type="button" value="Show All" ng-click="filterBugs.isClosed=undefined" />
+</div>
+
+<div class="orderBy">
+    Order By : <input type="text" name="txtOrder" ng-model="orderBy" /> <label>isDecending</label> <input type="checkbox" name="" ng-model="isDescending" />
+</div>
+
+<div class="bugs">
+    <ol>
+        <li ng-repeat="bug in bc.bugs | filter:filterBugs | orderBy : orderBy : isDescending ">
+            <span ng-class="{closed : bug.isClosed}" ng-click="bc.toggle(bug)">{{bug.name | trimText :30 }}</span>  -<span class="timeSpan">{{ bug.createdAt | toMoment}} </span>
+            <a href="#!/bugs/{{bug.id}}"> More details...</a>
+        </li>
+    </ol>
+
+    <input type="button" ng-click="bc.removeClosedBugs()" value="Remove Closed" id="btnRemoveBug" />
+</div>

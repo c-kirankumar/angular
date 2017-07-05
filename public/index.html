@@ -1,18 +1,349 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <title>Bug Tracker</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-    <script src="js/app.js"></script>
-    <title>Angular</title>
+    <script src="angular-route.js"></script>
+    <script src="moment.js"></script>
+    <script src="utils.js"></script>
+    <!--
+
+    Use Case
+    --------------
+
+    1. Add a bug -done
+    2. list all the bugs - done
+    3. toggle the completion status of the bug - done
+    4. Remove closed bugs. - done
+    5. Display statistics. - done.
+    6. Search for bugs -- done.
+    7. Sort the bugs -- done
+    8. improvies how the bugs are displayed --done
+    9. persist the bugs in the storage -- done
+    window.localStorage
+        - key/value store
+        - both key and value should be strings
+        - apis
+        . setItem(key,value)
+        . getItem(key) //= > value
+        . removeItem(key)
+        . key(index)
+        . clear()
+        . length
+        10. display the createdDT of the bugs -- done
+        11 persis the bugs in the server
+        12 categorize the bugs
+        13 view the bugs belong to one particular category
+        -->
+
+    <script>
+
+
+        var bugTrackerApp = angular.module("bugTrackerApp", ["utils", 'ngRoute']);
+
+        bugTrackerApp.provider('dataService', function () {
+            var innerFactoryName = 'inner  factor';
+            return {
+                name: 'outerFactory factory',
+                $get: function () {
+                    return { name: innerFactoryName };
+                }
+
+            }
+        });
+
+        // we can inject factory,service,value and constant
+        bugTrackerApp.run(function (dataService) {
+            console.log(' application initialized ');
+            console.log('dataService =', dataService);
+
+        });
+
+        // we can only inject provider and constant
+        bugTrackerApp.config(function (dataServiceProvider, BugServiceProvider, $routeProvider) {
+            console.log(' application configuration ')
+            console.log('dataServiceProvider = ', dataServiceProvider);
+
+
+            $routeProvider.when('/bugs', {
+                templateUrl: 'bugs-list.template.html',
+                controller: 'bugController',
+                controllerAs: 'bc'
+            }).when('/new', {
+                templateUrl: 'bug-new.template.html',
+                controller: 'newBugController',
+                controllerAs: 'nbc'
+
+            })
+		    .when('/bugs/:id', {
+		        templateUrl: 'bug-details.template.html',
+		        controller: 'bugDetailsController'
+		    })
+            .otherwise({
+                redirectTo: '/bugs'
+            });
+
+
+            BugServiceProvider.setBaseUrl('/bugs/')
+        });
+
+        bugTrackerApp.value('defaultTrimLength', 20);
+
+
+        bugTrackerApp.controller('bugDetailsController', function ($scope, $routeParams, BugService) {
+            $scope.bugId = $routeParams.id;
+            BugService.getAll().then(function (result) {
+
+                $scope.bug = result.filter(function (bug) {
+                    return bug.id == $scope.bugId;
+                })[0];
+            })
+        });
+
+        bugTrackerApp.controller("newBugController", function (Bug, BugService, $location) {
+            var _self = this;
+            this.name = "";
+            this.add = function () {
+                BugService.save(new Bug({ name: this.name })).then(function (response) {
+                    $location.path('/bugs');
+                })
+            }
+        });
+        bugTrackerApp.controller("bugController", function (Bug, BugService) {
+            var _self = this;
+            this.bugs = [];
+            BugService.getAll().then(function (response) {
+                _self.bugs = response;
+            });
+
+            this.name = "";
+            this.add = function () {
+                BugService.save(new Bug({ name: this.name })).then(function (response) {
+                    _self.bugs.push(new Bug(response));
+                })
+            }
+            this.toggle = function (bug) {
+                bug.toggle();
+                BugService.update(bug);
+            };
+            this.removeClosedBugs = function () {
+                for (var i = this.bugs.length - 1; i >= 0; i--) {
+                    if (this.bugs[i].isClosed) {
+                        BugService.remove(this.bugs[i]);
+                        this.bugs.splice(i, 1);
+                    }
+                }
+            }
+
+        });
+
+        bugTrackerApp.factory("Bug", function () {
+            function Bug(defaults) {
+                defaults = defaults || {};
+                this.id = defaults.id || 0;
+                this.name = defaults.name || "";
+                this.isClosed = defaults.isClosed || false;
+                this.createdAt = defaults.createdAt || new Date();
+            }
+
+            Bug.prototype.toggle = function () {
+                this.isClosed = !this.isClosed;
+            };
+            return Bug;
+        });
+
+
+        bugTrackerApp.provider('BugService', function () {
+            var _baseUrl = '/bugs/'
+            return {
+                $get: function ($http, Bug) {
+
+                    function save(bug) {
+                        return $http.post(_baseUrl, bug).then(function (response) {
+                            var result = response.data;
+                            return result;
+                        });
+                    }
+                    function getAll() {
+                        return $http.get(_baseUrl).then(function (response) {
+                            var result = response.data.map(function (bug) {
+                                return new Bug(bug);
+                            });
+                            return result;
+                        });
+                    };
+                    function update(bug) {
+                        return $http.put(_baseUrl + bug.id, bug).then(function (response) {
+                            var result = response.data;
+                            return result;
+                        });
+                    }
+
+                    function remove(bug) {
+                        return $http.delete(_baseUrl + bug.id).then(function (response) {
+                            return response.data;
+                        });
+                    }
+                    return {
+                        getAll: getAll,
+                        save: save,
+                        update: update,
+                        remove: remove
+                    };
+
+                },
+                setBaseUrl: function (baseUrl) {
+                    _baseUrl = baseUrl;
+                }
+
+            }
+        });
+
+
+        /*
+        bugTrackerApp.factory("BugStorage", function (Bug,$window) {
+
+            var bugStorage = $window.localStorage;
+            var maxBugId = 0;
+            var save = function (bug) {
+                bug.id = bug.id || ++maxBugId;
+                bugStorage.setItem(bug.id, angular.toJson(bug));
+                return bug;
+            };
+            var getAll = function () {
+                var bugs = [];
+                for (var i = 0; i < bugStorage.length; i++) {
+                    maxBugId = parseInt(bugStorage.key(i)) > maxBugId ? parseInt(bugStorage.key(i)) : maxBugId;
+                    var bugData = bugStorage.getItem(bugStorage.key(i));
+                    var bug = angular.fromJson(bugData);
+                    bugs.push(new Bug(bug));
+                }
+                return bugs;
+
+            }
+            var remove = function (bug) {
+                bugStorage.removeItem(bug.id);
+            }
+
+            return {
+                getAll: getAll,
+                save: save,
+                remove: remove
+            }
+
+        });
+        */
+
+
+        // as  a factory
+
+        //bugTrackerApp.factory('BugService', function ($http, Bug) {
+
+        //    function save(bug) {
+        //        return $http.post('/bugs', bug).then(function (response) {
+        //            var result = response.data;
+        //            return result;
+        //        });
+        //    }
+        //    function getAll() {
+        //        return $http.get('/bugs').then(function (response) {
+        //            var result = response.data.map(function (bug) {
+        //                return new Bug(bug);
+        //            });
+        //            return result;
+        //        });
+        //    };
+        //    function update(bug) {
+        //        return $http.put('/bugs/' + bug.id, bug).then(function (response) {
+        //            var result = response.data;
+        //            return result;
+        //        });
+        //    }
+
+        //    function remove(bug) {
+        //        return $http.delete('/bugs/' + bug.id).then(function (response) {
+        //            return response.data;
+        //        });
+        //    }
+        //    return {
+        //        getAll: getAll,
+        //        save: save,
+        //        update: update,
+        //        remove: remove
+        //    };
+
+        //})
+
+        // As a service
+
+        //bugTrackerApp.service('BugService', function ($http, Bug) {
+        //    this.save = function (bug) {
+        //        return $http.post('/bugs', bug).then(function (response) {
+        //            var result = response.data;
+        //            return result;
+        //        });
+        //    };
+
+        //    this.getAll = function () {
+        //        return $http.get('/bugs').then(function (response) {
+        //            var result = response.data.map(function (bug) {
+        //                return new Bug(bug);
+        //            });
+        //            return result;
+        //        });
+        //    };
+        //    this.update = function (bug) {
+        //        return $http.put('/bugs/' + bug.id, bug).then(function (response) {
+        //            var result = response.data;
+        //            return result;
+        //        });
+        //    }
+
+        //    this.remove = function (bug) {
+        //        return $http.delete('/bugs/' + bug.id).then(function (response) {
+        //            return response.data;
+        //        });
+        //    }
+        //    //return {
+        //    //    getAll: getAll,
+        //    //    save: save,
+        //    //    update: update,
+        //    //    remove: remove
+        //    //};
+
+        //})
+
+
+
+
+
+
+
+    </script>
+    <style>
+        .closed {
+            color: red;
+            font-weight: bold;
+            font-style: italic;
+            text-decoration: line-through;
+        }
+
+        .statistics, .search, .orderBy, .bugs {
+            padding: 10px 0px;
+        }
+
+        .timeSpan {
+            font-style: italic;
+        }
+    </style>
 </head>
-<body ng-app="app" ng-controller="hello as h" ng-init="h.name='kiran'">
-    <input type="text" name="name" ng-model="h.name" />
-    <span>{{h.name}}</span>
 
-    <ol>
-        <li ng-repeat="n in h.arr">{{n}}</li>
-    </ol>
 
-    <button name="btn" value="click" ng-click="h.clickme()">Click</button>
+<body ng-app="bugTrackerApp" ng-controller="bugController as bc">
+    <h2> Bug Tracker </h2>
+    <div class="statistics">{{ bc.bugs | closedCount  }}/ {{bc.bugs.length}}   </div>
+    <div ng-view></div>
+
+
 </body>
 </html>

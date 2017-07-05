@@ -1,0 +1,9 @@
+﻿<h2>Bug details will be display over here </h2>
+
+<span>bug id is {{bdc.bugId}}</span>
+
+<span ng-class="{closed : bug.isClosed}" ng-click="bc.toggle(bug)">{{bdc.bug.name }}</span>
+
+  -<span class="timeSpan">{{ bdc.bug.createdAt | toMoment}} </span>
+
+<span>{{bdc.bug.isClosed}}</span>
